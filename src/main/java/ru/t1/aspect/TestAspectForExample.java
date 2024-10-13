@@ -1,5 +1,6 @@
 package ru.t1.aspect;
 
+import lombok.experimental.UtilityClass;
 import ru.t1.annotation.AfterSuite;
 import ru.t1.annotation.AfterTest;
 import ru.t1.annotation.BeforeSuite;
@@ -17,18 +18,14 @@ import java.util.Set;
 /**
  * @author YKozlova
  */
-public class TestAspectForExample {
-
-    private TestAspectForExample() {
-    }
+@UtilityClass
+public final class TestAspectForExample {
 
     public static void checkIfTest() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
         Set<Integer> testQueue = new HashSet<>();
 
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(Test.class)) {
 
                 int priority = method.getAnnotation(Test.class).priority();
@@ -53,10 +50,7 @@ public class TestAspectForExample {
 
     public static void checkIfCsvSource() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
-
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(CsvSource.class)) {
 
                 String value = method.getAnnotation(CsvSource.class).value();
@@ -80,10 +74,7 @@ public class TestAspectForExample {
 
     public static void checkIfBeforeTest() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
-
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(BeforeTest.class) && Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @BeforeTest не может быть static.");
@@ -95,10 +86,7 @@ public class TestAspectForExample {
 
     public static void checkIfAfterTest() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
-
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(AfterTest.class) && Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @AfterTest не может быть static.");
@@ -110,10 +98,7 @@ public class TestAspectForExample {
 
     public static void checkIfBeforeSuite() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
-
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(BeforeSuite.class) && !Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @BeforeSuite должен быть static.");
@@ -125,10 +110,7 @@ public class TestAspectForExample {
 
     public static void checkIfAfterSuite() {
 
-        Class<Example> clazz = Example.class;
-        Method[] methods = clazz.getMethods();
-
-        for (Method method : methods) {
+        for (Method method : getMethodsExampleClass()) {
             if (method.isAnnotationPresent(AfterSuite.class) && !Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @AfterSuite должен быть static.");
@@ -136,5 +118,11 @@ public class TestAspectForExample {
         }
 
         System.out.println("Методы с аннотацией @AfterSuite проверены и являются корректными.");
+    }
+
+    private static Method[] getMethodsExampleClass() {
+
+        Class<Example> clazz = Example.class;
+        return clazz.getDeclaredMethods();
     }
 }

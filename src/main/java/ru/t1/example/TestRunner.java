@@ -1,5 +1,6 @@
 package ru.t1.example;
 
+import lombok.experimental.UtilityClass;
 import ru.t1.annotation.AfterSuite;
 import ru.t1.annotation.AfterTest;
 import ru.t1.annotation.BeforeSuite;
@@ -10,6 +11,7 @@ import ru.t1.aspect.TestAspectForExample;
 import ru.t1.exception.TestException;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,23 +22,34 @@ import java.util.Objects;
  *
  * @author YKozlova
  */
-public class TestRunner {
-
-    private TestRunner() {
-    }
+@UtilityClass
+public final class TestRunner {
 
     public static void runTests(Class<?> c) {
 
-        TestAspectForExample.checkIfBeforeTest();
-        TestAspectForExample.checkIfCsvSource();
-        TestAspectForExample.checkIfAfterTest();
-        TestAspectForExample.checkIfBeforeSuite();
-        TestAspectForExample.checkIfAfterSuite();
-        TestAspectForExample.checkIfTest();
+        checkTestsAnnotation();
 
-        Method[] methods = c.getMethods();
+        Method[] methods = c.getDeclaredMethods();
 
         runTests(methods, c);
+    }
+
+    private static void checkTestsAnnotation() {
+
+        Class<TestAspectForExample> clazz = TestAspectForExample.class;
+        Method[] methods = clazz.getDeclaredMethods();
+
+        try {
+
+            for (Method method : methods) {
+                if (Modifier.isPublic(method.getModifiers())) {
+                    method.invoke(TestAspectForExample.class);
+                }
+            }
+        } catch (Exception exception) {
+
+            throw new TestException(exception.getMessage());
+        }
     }
 
     private static void runTests(Method[] methods, Class<?> c) {
