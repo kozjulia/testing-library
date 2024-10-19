@@ -20,7 +20,6 @@ public class Example {
     }
 
     @AfterTest
-
     public void exampleAfterTest() {
 
         System.out.println("run AfterTest");
@@ -56,7 +55,7 @@ public class Example {
         System.out.println("run exampleTest1");
     }
 
-    @CsvSource("10, Java, 20, true")
+    @CsvSource("10,Java,20,true")
     public void exampleCsvSource(int a, String b, int c, boolean d) {
 
         System.out.println("run exampleCsvSource");

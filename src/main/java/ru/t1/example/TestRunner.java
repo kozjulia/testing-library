@@ -7,11 +7,12 @@ import ru.t1.annotation.BeforeSuite;
 import ru.t1.annotation.BeforeTest;
 import ru.t1.annotation.CsvSource;
 import ru.t1.annotation.Test;
-import ru.t1.aspect.TestAspectForExample;
+import ru.t1.aspect.TestAspect;
 import ru.t1.exception.TestException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,23 +28,23 @@ public final class TestRunner {
 
     public static void runTests(Class<?> c) {
 
-        checkTestsAnnotation();
+        checkTestsAnnotation(c);
 
         Method[] methods = c.getDeclaredMethods();
 
         runTests(methods, c);
     }
 
-    private static void checkTestsAnnotation() {
+    private static void checkTestsAnnotation(Class<?> clz) {
 
-        Class<TestAspectForExample> clazz = TestAspectForExample.class;
+        Class<TestAspect> clazz = TestAspect.class;
         Method[] methods = clazz.getDeclaredMethods();
 
         try {
 
             for (Method method : methods) {
                 if (Modifier.isPublic(method.getModifiers())) {
-                    method.invoke(TestAspectForExample.class);
+                    method.invoke(TestAspect.class, clz);
                 }
             }
         } catch (Exception exception) {
@@ -143,26 +144,42 @@ public final class TestRunner {
                 try {
                     if (Objects.nonNull(beforeTestMethod)) {
                         beforeTestMethod.invoke(object);
+                        System.out.println("Успешно отработал метод " + beforeTestMethod.getName());
                     }
 
                     if (test.isAnnotationPresent(CsvSource.class)) {
 
                         String value = test.getAnnotation(CsvSource.class).value();
                         String[] values = value.split(",");
+                        Object[] args = new Object[values.length];
 
-                        int a = Integer.parseInt(values[0].trim());
-                        String b = values[1].trim();
-                        int c = Integer.parseInt(values[2].trim());
-                        boolean d = Boolean.parseBoolean(values[3].trim());
+                        Parameter[] parameters = test.getParameters();
+                        for (int i = 0; i < parameters.length; i++) {
+                            if (parameters[i].getType().equals(Integer.class)
+                                    || parameters[i].getType().equals(int.class)) {
+                                args[i] = Integer.parseInt(values[i]);
+                                continue;
+                            }
+                            if (parameters[i].getType().equals(Boolean.class)
+                                    || parameters[i].getType().equals(boolean.class)) {
+                                args[i] = Boolean.parseBoolean(values[i]);
+                                continue;
+                            }
 
-                        test.invoke(object, a, b, c, d);
+                            args[i] = values[i];
+                        }
+
+                        test.invoke(object, args);
+                        System.out.println("Успешно отработал метод " + test.getName());
                     } else {
 
                         test.invoke(object);
+                        System.out.println("Успешно отработал метод " + test.getName());
                     }
 
                     if (Objects.nonNull(afterTestMethod)) {
                         afterTestMethod.invoke(object);
+                        System.out.println("Успешно отработал метод " + afterTestMethod.getName());
                     }
                 } catch (Exception exception) {
 

@@ -7,11 +7,11 @@ import ru.t1.annotation.BeforeSuite;
 import ru.t1.annotation.BeforeTest;
 import ru.t1.annotation.CsvSource;
 import ru.t1.annotation.Test;
-import ru.t1.example.Example;
 import ru.t1.exception.TestException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,13 +19,13 @@ import java.util.Set;
  * @author YKozlova
  */
 @UtilityClass
-public final class TestAspectForExample {
+public final class TestAspect {
 
-    public static void checkIfTest() {
+    public static void checkIfTest(Class<?> clazz) {
 
         Set<Integer> testQueue = new HashSet<>();
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(Test.class)) {
 
                 int priority = method.getAnnotation(Test.class).priority();
@@ -48,9 +48,9 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @Test проверены и являются корректными.");
     }
 
-    public static void checkIfCsvSource() {
+    public static void checkIfCsvSource(Class<?> clazz) {
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(CsvSource.class)) {
 
                 String value = method.getAnnotation(CsvSource.class).value();
@@ -58,10 +58,22 @@ public final class TestAspectForExample {
 
                 try {
 
-                    Integer.parseInt(values[0].trim());
-                    values[1].trim();
-                    Integer.parseInt(values[2].trim());
-                    Boolean.parseBoolean(values[3].trim());
+                    if (values.length != method.getParameterCount()) {
+                        throw new TestException("В метод с аннотацией @CsvSource передан некорректный параметр.");
+                    }
+
+                    Parameter[] parameters = method.getParameters();
+                    for (int i = 0; i < parameters.length; i++) {
+
+                        if (parameters[i].getType().equals(Integer.class)
+                                || parameters[i].getType().equals(int.class)) {
+                            Integer.parseInt(values[i]);
+                        }
+                        if (parameters[i].getType().equals(Boolean.class)
+                                || parameters[i].getType().equals(boolean.class)) {
+                            Boolean.parseBoolean(values[i]);
+                        }
+                    }
                 } catch (Exception exception) {
 
                     throw new TestException("В метод с аннотацией @CsvSource передан некорректный параметр.");
@@ -72,9 +84,9 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @CsvSource проверены и являются корректными.");
     }
 
-    public static void checkIfBeforeTest() {
+    public static void checkIfBeforeTest(Class<?> clazz) {
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(BeforeTest.class) && Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @BeforeTest не может быть static.");
@@ -84,9 +96,9 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @BeforeTest проверены и являются корректными.");
     }
 
-    public static void checkIfAfterTest() {
+    public static void checkIfAfterTest(Class<?> clazz) {
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(AfterTest.class) && Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @AfterTest не может быть static.");
@@ -96,9 +108,9 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @AfterTest проверены и являются корректными.");
     }
 
-    public static void checkIfBeforeSuite() {
+    public static void checkIfBeforeSuite(Class<?> clazz) {
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(BeforeSuite.class) && !Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @BeforeSuite должен быть static.");
@@ -108,9 +120,9 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @BeforeSuite проверены и являются корректными.");
     }
 
-    public static void checkIfAfterSuite() {
+    public static void checkIfAfterSuite(Class<?> clazz) {
 
-        for (Method method : getMethodsExampleClass()) {
+        for (Method method : getMethodsClass(clazz)) {
             if (method.isAnnotationPresent(AfterSuite.class) && !Modifier.isStatic(method.getModifiers())) {
 
                 throw new TestException("Метод с аннотацией @AfterSuite должен быть static.");
@@ -120,9 +132,8 @@ public final class TestAspectForExample {
         System.out.println("Методы с аннотацией @AfterSuite проверены и являются корректными.");
     }
 
-    private static Method[] getMethodsExampleClass() {
+    private static Method[] getMethodsClass(Class<?> clazz) {
 
-        Class<Example> clazz = Example.class;
         return clazz.getDeclaredMethods();
     }
 }
